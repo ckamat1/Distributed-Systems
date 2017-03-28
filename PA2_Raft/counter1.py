@@ -16,11 +16,7 @@ class TestObj(SyncObj):
         super(TestObj, self).__init__(selfNodeAddr, otherNodeAddrs)
         self.__counter = 0
         self.__list_of_queues=[]
-
-    @replicated
-    def incCounter(self):
-        self.__list_of_queues.append([])
-        return self.__counter
+ 
 
     @replicated
     def qCreate(self, label):
@@ -28,25 +24,50 @@ class TestObj(SyncObj):
         return len(self.__list_of_queues)
 
     @replicated
-    def qPush(self,label,val):
-        id=self.getqID(label)
-        self.__list_of_queues[id][1].append(val)
+    def qPush(self,qID,val):
+      try:
+        if(int(qID)+1>len(self.__list_of_queues)):
+            return False
+        self.__list_of_queues[int(qID)][1].append(val)
+        return True
         
-        return self.__list_of_queues[0]   
-    @replicated     
-    def qPop(self,label):
-         id=self.getqID(label)
-         if id==False:
-            return None
-         try:
-          result=self.__list_of_queues[id][1].pop(0)
-         except:
-            result=None
-         return result
-    def getCounter(self):
-        return self.__counter
+      except:
+        return False 
 
-    def getqID(self,label):
+
+    @replicated     
+    def qPop(self,qID):
+      try:
+        if(int(qID)+1>len(self.__list_of_queues)):
+            return False
+        result=self.__list_of_queues[int(qID)][1].pop(0)
+      except:
+            result=False
+            return result
+
+   
+
+    def qTop(self,qID):
+     try:
+      if(int(qID)+1>len(self.__list_of_queues)):
+        return False
+      else:
+        return str(self.__list_of_queues[int(qID)][1][0])
+     except:
+       return "noTop"
+
+
+    def qSize(self,qID):
+       #try:
+        if(int(qID)+1>len(self.__list_of_queues)):
+            return False
+        else:
+            return str(len(self.__list_of_queues[int(qID)][1]))
+     #  except:
+            return False
+ 
+
+    def qID(self,label):
         i=0
         for x in range(0,len(self.__list_of_queues)):
              if self.__list_of_queues[x][0]==str(label):
@@ -71,7 +92,9 @@ def print_queue(obj):
    if(command=='print'):
       print (o.getQueue())
    else:
-      print("Command not found!!!")    
+      print("Command not found!!!") 
+
+
 if __name__ == '__main__':
     sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.bind(('',int(sys.argv[1])))
@@ -102,12 +125,16 @@ if __name__ == '__main__':
             continue
         # if n < 2000:
         #if n<5:
-        sock.listen(5)
-        conn,caddr=sock.accept()
-        print ("hello")
-        message=conn.recv(1024)
-        x=message.split()[0]
-        print (x)
+        try:
+          print (o._getLeader())
+          sock.listen(5)
+          conn,caddr=sock.accept()
+          print ("hello")
+          message=conn.recv(1024)
+          x=message.split()[0]
+          print (x)
+        except:
+            continue
         
         if x=='create':    
          label=message.split()[1]  
@@ -115,21 +142,40 @@ if __name__ == '__main__':
          o.qCreate(label, callback=partial(onAdd, cnt=n))
         elif x=='push':
 
-         label=message.split()[1]
+         qID=message.split()[1]
          val=message.split()[2]
-         o.qPush(label,val)
+         mes=o.qPush(qID,val)
+         conn.send(str(mes))
+         print (mes)
         elif x=='pop':
          #label=raw_input("Enter your label : ")
          print ("Popped")
+         qID=message.split()[1]
+         try:
+           if(int(qID)+1>len(o.getQueue())):
+              send=False
+           else:
+              send=o.getQueue()[int(qID)][1][0]
+         except:
+              send =False
+         print (send)
+         conn.send(str(send))
+         print("Popped Element is " + str(o.qPop(qID)))
+        elif x=='getqID':
+
+
          label=message.split()[1]
-         print("Popped Element is " + str(o.qPop(label)))
-        else:
-         label=raw_input("Enter your label : ")
-         print (o.getqID(label))
+         conn.send(str(o.qID(label)))
+        elif x=='getSize':
+            qID=message.split()[1]
+            size=o.qSize(qID)
+            conn.send(str(size))
+        elif x=='qTop':
+            qID=message.split()[1]
+            top=o.qTop(qID)
+            conn.send(str(top))
+             
         #o.qPush(x, callback=partial(onAdd, cnt=n))
         
             #print(len(list_of_queues))
-        n += 1
-        # if n % 200 == 0:
-        # if True:
-        #    print('Counter value:', o.getCounter(), o._getLeader(), o._getRaftLogSize(), o._getLastCommitIndex())
+     
