@@ -126,7 +126,7 @@ if __name__ == '__main__':
         # if n < 2000:
         #if n<5:
         try:
-          print (o._getLeader())
+          print ("Current Leader is {}".format(o._getLeader()))
           sock.listen(5)
           conn,caddr=sock.accept()
           print ("hello")
