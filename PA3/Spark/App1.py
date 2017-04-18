@@ -23,7 +23,7 @@ def getListofTuples(text):
 path = "/root/source/Distributed-Systems/PA3/Spark/"
 # logFile = "n-grams.txt"  # Should be some file on your system
 # logFile = path + logFile
-logFile = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/1gram/data"
+logFile = "s3n://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/1gram/data"
 conf = SparkConf().setAppName("Simple App").setMaster("local")
 sc = SparkContext(conf=conf)
 lines = sc.textFile(logFile)
