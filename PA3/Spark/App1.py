@@ -1,14 +1,14 @@
 from pyspark import SparkContext, SparkConf
 import os
 import sys
-from nltk.tokenize import RegexpTokenizer
+# from nltk.tokenize import RegexpTokenizer
 from operator import add
 
 
-tokenizer = RegexpTokenizer(r'\w+')
+# tokenizer = RegexpTokenizer(r'\w+')
 
-def tokenize(text):
-    return tokenizer.tokenize(text.lower())
+# def tokenize(text):
+#     return tokenizer.tokenize(text.lower())
 
 
 def tokens(text):
